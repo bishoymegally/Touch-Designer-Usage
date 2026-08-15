@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# TouchDesigner
+*.toe.autosave
+*.tox.autosave
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/

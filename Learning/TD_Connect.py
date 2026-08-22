@@ -28,7 +28,7 @@ landmark_names = [
 
 
 base_options = mp.tasks.BaseOptions(model_asset_path="gesture_recognizer.task")
-options = mp.tasks.vision.GestureRecognizerOptions(base_options = base_options, num_hands = 2)
+options = mp.tasks.vision.GestureRecognizerOptions(base_options = base_options, num_hands = 2, min_hand_detection_confidence=0.85, min_tracking_confidence=0.85)
 handlandmarker = mp.tasks.vision.GestureRecognizer.create_from_options(options)
 resolution = oscI.initialize(1)
 left_hand = oscI.initialize(2)

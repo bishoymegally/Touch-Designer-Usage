@@ -28,7 +28,11 @@ landmark_names = [
 
 
 base_options = mp.tasks.BaseOptions(model_asset_path="gesture_recognizer.task")
-options = mp.tasks.vision.GestureRecognizerOptions(base_options = base_options, num_hands = 2, min_hand_detection_confidence=0.85, min_tracking_confidence=0.85)
+options = mp.tasks.vision.GestureRecognizerOptions(base_options = base_options, num_hands = 2,
+                min_hand_detection_confidence=0.75,
+                min_tracking_confidence=0.65,
+                running_mode=mp.tasks.vision.RunningMode.VIDEO,
+)
 handlandmarker = mp.tasks.vision.GestureRecognizer.create_from_options(options)
 resolution = oscI.initialize(1)
 left_hand = oscI.initialize(2)
@@ -42,19 +46,18 @@ hand_ports = {
 
 
 
-capture = cv2.VideoCapture(0)
+capture = cv2.VideoCapture(1)
 frames_passed = 0
 
-def calculate_frames(ET, ST, frames):
-    if ET - ST >= 1:
-        FPS = (frames/(ET - ST))
-        print(f"FPS is {FPS}")
-        return 0
-    else:
-        return frames
 
 start_time = time.perf_counter()
+timestamp_ms = 0
 
+ret, frame = capture.read()
+
+height, width = frame.shape[:2]
+resolution.send_message("/height", height)
+resolution.send_message("/width", width)
 
 while True:
     ret, frame = capture.read()
@@ -74,7 +77,8 @@ while True:
         mp.ImageFormat.SRGB,
         data=rgb_frame)
 
-    result = handlandmarker.recognize(mp_image)
+    timestamp_ms = max(timestamp_ms + 1, int(time.perf_counter() * 1000))
+    result = handlandmarker.recognize_for_video(mp_image, timestamp_ms)
     gestures = result.gestures
 
     hands = result.hand_landmarks if len(result.hand_landmarks) != 0 else None
@@ -88,8 +92,9 @@ while True:
                 y = landmark.y
                 hand_ports[which_hand].send_message(f"/{landmark_names[i]}{which_hand}x", x)
                 hand_ports[which_hand].send_message(f"/{landmark_names[i]}{which_hand}y", y)
-        print(result.handedness)
         gesture_port.send_message(f"/gesture{which_hand}", 0 if result.gestures[index][0].category_name == "Closed_Fist" else 1)
+        gesture_port.send_message(f"/both", 1 if len(hands) == 2 else 0)
+
     
 
 
